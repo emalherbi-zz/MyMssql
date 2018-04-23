@@ -1,6 +1,7 @@
 {
     "name": "emalherbi/mymssql",
     "description": "My Mssql Pdo (MSSQL or SQLSRV)",
+    "license": "MIT",
     "require": {
         "php": ">= 5.0.0"
     }
