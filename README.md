@@ -20,7 +20,7 @@ if (@date_default_timezone_get() !== @ini_get('date.timezone')) {
 
 $conn = array(
     'VERBOSE' => false,
-    'ADAPTER' => 'SQLSRV',
+    'ADAPTER' => 'SQLSRV', // or MSSQL
     'HOSTNAME' => '192.168.1.1',
     'USERNAME' => 'USERNAME',
     'PASSWORD' => 'PASSWORD',
