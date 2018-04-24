@@ -220,7 +220,7 @@ class MyMssql
             $log .= "[ERROR] > $err \n\n";
         }
 
-        $file = fopen($this->DL.$this->DS."logger-$date.txt", 'a+b');
+        $file = fopen($this->DL.$this->DS."log-$date.txt", 'a+b');
         fwrite($file, $log);
         fclose($file);
     }
