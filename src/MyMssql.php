@@ -22,10 +22,8 @@ ini_set('mssql.textsize', '2147483647');
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
-defined('MYMSSQLDS') || define('MYMSSQLDS', DIRECTORY_SEPARATOR);
-defined('MYMSSQLROOT') || define('MYMSSQLROOT', realpath(dirname(__FILE__)));
-
-// require_once MYMSSQLROOT.MYMSSQLDS.'INI.php';
+defined('MYMSSQL_DS') || define('MYMSSQL_DS', DIRECTORY_SEPARATOR);
+defined('MYMSSQL_ROOT') || define('MYMSSQL_ROOT', realpath(dirname(__FILE__)));
 
 class MyMssql
 {
@@ -43,12 +41,12 @@ class MyMssql
 
     public function getIni()
     {
-        return parse_ini_file(MYMSSQLROOT.MYMSSQLDS.'MyMssql.ini');
+        return parse_ini_file(MYMSSQL_ROOT.MYMSSQL_DS.'MyMssql.ini');
     }
 
     public function setIni($ini = array())
     {
-        INI::write(MYMSSQLROOT.MYMSSQLDS.'MyMssql.ini', $ini);
+        INI::write(MYMSSQL_ROOT.MYMSSQL_DS.'MyMssql.ini', $ini);
     }
 
     public function connect()
@@ -162,14 +160,14 @@ class MyMssql
         $date = date('y-m-d');
         $hour = date('H:i:s');
 
-        @mkdir(MYMSSQLROOT, 0777, true);
-        @chmod(MYMSSQLROOT, 0777);
+        @mkdir(MYMSSQL_ROOT, 0777, true);
+        @chmod(MYMSSQL_ROOT, 0777);
 
         $log = '';
         $log .= "[$hour] > $str \n";
         $log .= "[RESULT] > $result \n\n";
 
-        $file = fopen(MYMSSQLROOT.MYMSSQLDS."logger-$date.txt", 'a+b');
+        $file = fopen(MYMSSQL_ROOT.MYMSSQL_DS."logger-$date.txt", 'a+b');
         fwrite($file, $log);
         fclose($file);
     }
