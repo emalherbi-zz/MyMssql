@@ -21,7 +21,9 @@ $conn = array(
     'PASSWORD' => 'PASSWORD',
     'DATABASE' => 'DATABASE',
 );
+
 $log = realpath(dirname(__FILE__));
+
 $myMssql = new MyMssql\MyMssql($conn, $log);		
 
 $result = $myMssql->fetchRow('SELECT * FROM TABLEX');	
