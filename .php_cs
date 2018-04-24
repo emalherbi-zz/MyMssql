@@ -14,7 +14,6 @@ return PhpCsFixer\Config::create()
         '@Symfony:risky' => true,
         'array_syntax' => ['syntax' => 'long'],
         'combine_consecutive_unsets' => true,
-        // one should use PHPUnit methods to set up expected exception instead of annotations
         'general_phpdoc_annotation_remove' => ['expectedException', 'expectedExceptionMessage', 'expectedExceptionMessageRegExp'],
         'header_comment' => ['header' => $header],
         'heredoc_to_nowdoc' => true,
@@ -33,6 +32,7 @@ return PhpCsFixer\Config::create()
         'semicolon_after_instruction' => true,
         'strict_comparison' => false,
         'strict_param' => true,
+        'dir_constant' => false,
     ])
     ->setFinder(
         PhpCsFixer\Finder::create()

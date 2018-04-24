@@ -18,7 +18,7 @@ ini_set('mssql.textsize', '2147483647');
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
 defined('DS') || define('DS', DIRECTORY_SEPARATOR);
-defined('ROOT') || define('ROOT', realpath(__DIR__));
+defined('ROOT') || define('ROOT', realpath(dirname(__FILE__)));
 
 class MyMssql
 {

@@ -27,7 +27,7 @@ echo '</pre>';
 try {
     $myMssql->begin();	
 
-    $result = $myMssql->exec('UPDATE TABLEX SET NAMEX=\'TESTE 999\' WHERE ID = 2');	
+    $result = $myMssql->exec('UPDATE TABLEX SET NAMEX=\'TEST 111\' WHERE ID = 2');	
     echo '<pre>';
     echo print_r($result);
     echo '</pre>';
