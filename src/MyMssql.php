@@ -22,31 +22,26 @@ ini_set('mssql.textsize', '2147483647');
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
-defined('MYMSSQL_DS') || define('MYMSSQL_DS', DIRECTORY_SEPARATOR);
-defined('MYMSSQL_ROOT') || define('MYMSSQL_ROOT', realpath(dirname(__FILE__)));
-
 class MyMssql
 {
+    private $DS = null; // DS
+    private $RT = null; // ROOT
+    private $DL = null; // DIR LOG
+
     private $db = null;
     private $ini = null;
 
-    public function __construct($ini = array())
+    public function __construct($ini = array(), $dl = '')
     {
+        $this->DS = DIRECTORY_SEPARATOR;
+        $this->RT = realpath(dirname(__FILE__));
+        $this->DL = empty($dl) ? realpath(dirname(__FILE__)) : $dl;
+
         if (!empty($ini)) {
             $this->setIni($ini);
         }
         $this->ini = $this->getIni();
         $this->connect();
-    }
-
-    public function getIni()
-    {
-        return parse_ini_file(MYMSSQL_ROOT.MYMSSQL_DS.'MyMssql.ini');
-    }
-
-    public function setIni($ini = array())
-    {
-        INI::write(MYMSSQL_ROOT.MYMSSQL_DS.'MyMssql.ini', $ini);
     }
 
     public function connect()
@@ -60,6 +55,14 @@ class MyMssql
         $password = $this->ini['PASSWORD'];
         $database = $this->ini['DATABASE'];
 
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Connect');
+            $this->logger('HOSTNAME: '.$hostname);
+            $this->logger('USERNAME: '.$username);
+            $this->logger('PASSWORD: '.$password);
+            $this->logger('DATABASE: '.$database);
+        }
+
         try {
             if ('SQLSRV' === $this->ini['ADAPTER']) {
                 $driver = "sqlsrv:server=$hostname; database=$database";
@@ -70,12 +73,18 @@ class MyMssql
             $this->db = new PDO($driver, $username, $password);
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Connect', $err);
             die(print_r($e->getMessage()));
         }
     }
 
     public function disconnect()
     {
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Disconnect');
+        }
+
         $this->db = null;
     }
 
@@ -83,13 +92,17 @@ class MyMssql
     {
         $query = $this->query($sql);
 
-        $result = false;
+        $result = array();
         foreach ($query as $row) {
-            $result = $row;
+            $result[] = $row;
             break;
         }
 
-        return $result;
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Fetch Row: '.json_encode($result));
+        }
+
+        return empty($result) ? false : $result[0];
     }
 
     public function fetchAll($sql)
@@ -101,7 +114,11 @@ class MyMssql
             $result[] = $row;
         }
 
-        return $result;
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Fetch All: '.json_encode($result));
+        }
+
+        return empty($result) ? false : $result;
     }
 
     public function exec($sql)
@@ -109,8 +126,14 @@ class MyMssql
         try {
             $this->connect();
 
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Exec: '.$sql);
+            }
+
             return $this->db->exec($sql);
         } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger($sql, $err);
             die(print_r($e->getMessage()));
         }
     }
@@ -118,56 +141,86 @@ class MyMssql
     public function begin()
     {
         $this->connect();
+
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Begin Transaction');
+        }
+
         $this->db->beginTransaction();
     }
 
     public function commit()
     {
         $this->connect();
+
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Commit');
+        }
+
         $this->db->commit();
     }
 
     public function rollback()
     {
         $this->connect();
+
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql RollBack');
+        }
+
         $this->db->rollBack();
+    }
+
+    public function getIni()
+    {
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Get Ini');
+        }
+
+        return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
+    }
+
+    private function setIni($ini = array())
+    {
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Set Ini');
+        }
+
+        INI::write($this->RT.$this->DS.'MyMssql.ini', array('INI' => $ini));
     }
 
     private function query($sql)
     {
         try {
             $this->connect();
-            $query = $this->db->query($sql, PDO::FETCH_ASSOC);
 
-            if (empty($query)) {
-                $this->logger('ERROR SQL: ', $sql);
-
-                return false;
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Query: '.$sql);
             }
 
-            return $query;
+            return $this->db->query($sql, PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger($sql, $err);
             die(print_r($e->getMessage()));
         }
     }
 
-    private function logger($str, $result)
+    private function logger($str, $err = '')
     {
-        if (false == $this->ini['DEBUG']) {
-            return;
-        }
-
         $date = date('y-m-d');
         $hour = date('H:i:s');
 
-        @mkdir(MYMSSQL_ROOT, 0777, true);
-        @chmod(MYMSSQL_ROOT, 0777);
+        @mkdir($this->DL, 0777, true);
+        @chmod($this->DL, 0777);
 
         $log = '';
         $log .= "[$hour] > $str \n";
-        $log .= "[RESULT] > $result \n\n";
+        if (!empty($err)) {
+            $log .= "[ERROR] > $err \n\n";
+        }
 
-        $file = fopen(MYMSSQL_ROOT.MYMSSQL_DS."logger-$date.txt", 'a+b');
+        $file = fopen($this->DL.$this->DS."logger-$date.txt", 'a+b');
         fwrite($file, $log);
         fclose($file);
     }

@@ -12,15 +12,17 @@ composer require emalherbi/mymssql
 
 ```php
 require_once 'vendor/autoload.php';
-	
-$myMssql = new MyMssql\MyMssql(array('INI' => array(
-    'DEBUG' => false,
+
+$conn = array(
+    'VERBOSE' => false,
     'ADAPTER' => 'SQLSRV',
     'HOSTNAME' => '192.168.1.1',
     'USERNAME' => 'USERNAME',
     'PASSWORD' => 'PASSWORD',
     'DATABASE' => 'DATABASE',
-)));		
+);
+$log = realpath(dirname(__FILE__));
+$myMssql = new MyMssql\MyMssql($conn, $log);		
 
 $result = $myMssql->fetchRow('SELECT * FROM TABLEX');	
 echo '<pre>';
