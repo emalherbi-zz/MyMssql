@@ -6,6 +6,8 @@
  * Full Stack Web Developer.
  */
 
+namespace MyMssql;
+
 class INI
 {
     const RETURN_NEWLINE = "\r\n";

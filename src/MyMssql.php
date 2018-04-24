@@ -6,6 +6,10 @@
  * Full Stack Web Developer.
  */
 
+namespace MyMssql;
+
+use PDO;
+
 set_time_limit(0);
 
 ini_set('memory_limit', '512M');
@@ -20,7 +24,7 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 defined('MYMSSQL_DS') || define('MYMSSQL_DS', DIRECTORY_SEPARATOR);
 defined('MYMSSQL_ROOT') || define('MYMSSQL_ROOT', realpath(dirname(__FILE__)));
 
-require_once MYMSSQL_ROOT.MYMSSQL_DS.'INI.php';
+// require_once MYMSSQL_ROOT.MYMSSQL_DS.'INI.php';
 
 class MyMssql
 {
@@ -29,7 +33,9 @@ class MyMssql
 
     public function __construct($ini = array())
     {
-        $this->setIni($ini);
+        if (!empty($ini)) {
+            $this->setIni($ini);
+        }
         $this->ini = $this->getIni();
         $this->connect();
     }
