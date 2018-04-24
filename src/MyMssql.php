@@ -8,6 +8,7 @@
 
 namespace MyMssql;
 
+use Exception;
 use PDO;
 
 set_time_limit(0);
