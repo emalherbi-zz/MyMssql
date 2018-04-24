@@ -208,7 +208,7 @@ class MyMssql
 
     private function logger($str, $err = '')
     {
-        $date = date('y-m-d');
+        $date = date('Y-m-d');
         $hour = date('H:i:s');
 
         @mkdir($this->DL, 0777, true);
