@@ -1,6 +1,6 @@
 # MyMssql
 
-My Mssql Pdo (MSSQL or SQLSRV)
+My Mssql PDO (MSSQL or SQLSRV)
 
 # Install
 
@@ -11,13 +11,9 @@ composer require emalherbi/mymssql
 # Usage
 
 ```php
-defined('PS') || define('PS', PATH_SEPARATOR);
-defined('DS') || define('DS', DIRECTORY_SEPARATOR);
-defined('ROOT') || define('ROOT', realpath(dirname(__FILE__)));
+require_once 'vendor/autoload.php';
 	
-require_once ROOT.DS.'vendor'.DS.'autoload.php';
-	
-$myMssql = new MyMssql(array('INI' => array(
+$myMssql = new MyMssql\MyMssql(array('INI' => array(
     'DEBUG' => false,
     'ADAPTER' => 'SQLSRV',
     'HOSTNAME' => '192.168.1.1',
