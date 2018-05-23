@@ -88,6 +88,23 @@ class MyMssql
         $this->db = null;
     }
 
+    public function fetchOne($sql)
+    {
+        $query = $this->query($sql);
+
+        $result = array();
+        foreach ($query as $row) {
+            $result[] = $row;
+            break;
+        }
+
+        if (true == $this->ini['VERBOSE']) {
+            $this->logger('MyMssql Fetch One: '.json_encode($result));
+        }
+
+        return empty($result) ? false : $result[0];
+    }
+
     public function fetchRow($sql)
     {
         $query = $this->query($sql);
