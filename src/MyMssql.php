@@ -163,7 +163,11 @@ class MyMssql
             $this->logger('MyMssql Begin Transaction');
         }
 
-        $this->db->beginTransaction();
+        if ('SQLSRV' === $this->ini['ADAPTER']) {
+            $this->db->beginTransaction();
+        } else {
+            $this->logger('MyMssql Begin Transaction Only Works in SQLSRV ADAPTER');
+        }
     }
 
     public function commit()
@@ -174,7 +178,11 @@ class MyMssql
             $this->logger('MyMssql Commit');
         }
 
-        $this->db->commit();
+        if ('SQLSRV' === $this->ini['ADAPTER']) {
+            $this->db->commit();
+        } else {
+            $this->logger('MyMssql Commit Only Works in SQLSRV ADAPTER');
+        }
     }
 
     public function rollback()
@@ -185,7 +193,11 @@ class MyMssql
             $this->logger('MyMssql RollBack');
         }
 
-        $this->db->rollBack();
+        if ('SQLSRV' === $this->ini['ADAPTER']) {
+            $this->db->rollBack();
+        } else {
+            $this->logger('MyMssql RollBack Only Works in SQLSRV ADAPTER');
+        }
     }
 
     public function getIni()
