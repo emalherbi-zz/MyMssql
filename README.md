@@ -22,7 +22,7 @@ try {
     $mssql = new MyMssql\MyMssql(array(
         'VERBOSE' => true,
         'ADAPTER' => 'SQLSRV', // or MSSQL
-        'HOSTNAME' => '192.168.1.100',
+        'HOSTNAME' => '192.168.1.100', // or 192.168.1.100\\SQL2016
         'USERNAME' => 'USERNAME',
         'PASSWORD' => 'PASSWORD',
         'DATABASE' => 'DATABASE',
