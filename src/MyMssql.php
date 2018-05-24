@@ -74,8 +74,23 @@ class MyMssql
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
             $err = $e->getMessage();
-            $this->logger('MyMssql Connect', $err);
-            die(print_r($e->getMessage()));
+            $this->logger('MyMssql Connect '.$this->ini['ADAPTER'], $err);
+
+            try {
+                if ('SQLSRV' !== $this->ini['ADAPTER']) {
+                    $driver = "sqlsrv:server=$hostname; database=$database";
+                } else {
+                    $driver = "mssql:host=$hostname; dbname=$database";
+                }
+
+                $this->db = new PDO($driver, $username, $password);
+                $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            } catch (Exception $e) {
+                $err = $e->getMessage();
+                $this->logger('MyMssql Connect '.$this->ini['ADAPTER'], $err);
+
+                die(print_r($e->getMessage()));
+            }
         }
     }
 
