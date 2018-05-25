@@ -170,6 +170,23 @@ class MyMssql
         }
     }
 
+    public function query($sql)
+    {
+        try {
+            $this->connect();
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Query: '.$sql);
+            }
+
+            return $this->db->query($sql, PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger($sql, $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
     public function begin()
     {
         $this->connect();
@@ -231,23 +248,6 @@ class MyMssql
         }
 
         INI::write($this->RT.$this->DS.'MyMssql.ini', array('INI' => $ini));
-    }
-
-    private function query($sql)
-    {
-        try {
-            $this->connect();
-
-            if (true == $this->ini['VERBOSE']) {
-                $this->logger('MyMssql Query: '.$sql);
-            }
-
-            return $this->db->query($sql, PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            $err = $e->getMessage();
-            $this->logger($sql, $err);
-            die(print_r($e->getMessage()));
-        }
     }
 
     private function logger($str, $err = '')
