@@ -28,6 +28,20 @@ try {
         'DATABASE' => 'DATABASE',
     ), realpath(dirname(__FILE__)));
 
+    $result = $mssql->execute("IF OBJECT_ID('USUARIOS') IS NULL
+        BEGIN
+            CREATE TABLE [dbo].[USUARIOS]
+            (
+                [ID_USUARIOS] [INT] IDENTITY(1,1) NOT NULL,
+                [NOME] VARCHAR(100) NOT NULL,
+                PRIMARY KEY CLUSTERED
+            ([ID_USUARIOS] ASC) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+            ) ON [PRIMARY]
+        END");
+    echo '<pre>';
+    echo print_r($result);
+    echo '</pre>';    
+
     $row = $mssql->fetchRow('SELECT * FROM CLIENTES');
     echo '<pre>';
     echo print_r($row);
@@ -68,7 +82,7 @@ try {
     echo print_r($result);
     echo '</pre>';
 
-    $sxName = 'SX_SAVECLIENTES';
+    $sxName = 'SX_CLIENTES_SAVE';
     $params = array(2, '2017-01-01', 385, 0, 0, 0, 0);
     $result = $mssqlsx->execSx($sxName, $params);
     echo '<pre>';

@@ -170,16 +170,18 @@ class MyMssql
         }
     }
 
-    public function query($sql)
+    public function execute($sql)
     {
         try {
             $this->connect();
 
             if (true == $this->ini['VERBOSE']) {
-                $this->logger('MyMssql Query: '.$sql);
+                $this->logger('MyMssql Exec Script: '.$sql);
             }
 
-            return $this->db->query($sql, PDO::FETCH_ASSOC);
+            $prepare = $this->db->prepare($sql);
+
+            return $prepare->execute();
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger($sql, $err);
@@ -239,6 +241,23 @@ class MyMssql
         }
 
         return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
+    }
+
+    private function query($sql)
+    {
+        try {
+            $this->connect();
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Query: '.$sql);
+            }
+
+            return $this->db->query($sql, PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger($sql, $err);
+            die(print_r($e->getMessage()));
+        }
     }
 
     private function setIni($ini = array())
