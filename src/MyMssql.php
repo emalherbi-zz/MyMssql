@@ -179,9 +179,15 @@ class MyMssql
                 $this->logger('MyMssql Exec Script: '.$sql);
             }
 
-            $prepare = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
+            $stmt = $stmt->execute();
 
-            return $prepare->execute();
+            // fix #7
+            // Inserido a função "disconnect" para correção de erro quando executa muitos scripts ao mesmo tempo.
+            // General error: 10038 Attempt to initiate a new SQL Server operation with results pending.
+            $this->disconnect();
+
+            return $stmt;
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger($sql, $err);
