@@ -94,6 +94,11 @@ class MyMssql
         }
     }
 
+    public function isConnect()
+    {
+        return empty($this->db) ? false : true;
+    }
+
     public function disconnect()
     {
         if (true == $this->ini['VERBOSE']) {

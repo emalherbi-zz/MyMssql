@@ -28,6 +28,8 @@ try {
         'DATABASE' => 'DATABASE',
     ), realpath(dirname(__FILE__)));
 
+    $isConnect = $mssql->isConnect();
+
     $result = $mssql->execute("IF OBJECT_ID('USUARIOS') IS NULL
         BEGIN
             CREATE TABLE [dbo].[USUARIOS]
