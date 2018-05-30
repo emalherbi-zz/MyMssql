@@ -142,6 +142,11 @@ class MyMssql
         return empty($result) ? false : $result[0];
     }
 
+    public function fetchRowSx($sxName, $params, $test = false)
+    {
+        return $this->querySx($sxName, $params, $test, 'fetchRow');
+    }
+
     public function fetchAll($sql)
     {
         $query = $this->query($sql);
@@ -156,6 +161,11 @@ class MyMssql
         }
 
         return empty($result) ? false : $result;
+    }
+
+    public function fetchAllSx($sxName, $params, $test = false)
+    {
+        return $this->querySx($sxName, $params, $test, 'fetchAll');
     }
 
     public function exec($sql)
@@ -175,7 +185,12 @@ class MyMssql
         }
     }
 
-    public function execute($sql)
+    public function execSx($sxName, $params, $test = false)
+    {
+        return $this->querySx($sxName, $params, $test, 'exec');
+    }
+
+    public function execScript($sql)
     {
         try {
             $this->connect();
@@ -187,9 +202,6 @@ class MyMssql
             $stmt = $this->db->prepare($sql);
             $stmt = $stmt->execute();
 
-            // fix #7
-            // Inserido a função "disconnect" para correção de erro quando executa muitos scripts ao mesmo tempo.
-            // General error: 10038 Attempt to initiate a new SQL Server operation with results pending.
             $this->disconnect();
 
             return $stmt;
@@ -254,6 +266,44 @@ class MyMssql
         return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
     }
 
+    private function querySx($sxName, $params, $test = false, $function = 'exec')
+    {
+        if (false === $this->sxExist($sxName)) {
+            return 'Stored Procedure '.$sxName.' not find.';
+        }
+
+        $array = $this->getFields($sxName);
+
+        if (count($params) !== count($array)) {
+            return 'Parameters reported differently than stored procedure parameters.';
+        }
+
+        $sql = $sxName.' ';
+
+        for ($i = 0; $i < count($params); ++$i) {
+            if (0 !== $i) {
+                $sql .= ', ';
+            }
+
+            $type = strtoupper($array[$i]['TYPE']);
+
+            if (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
+                $sql .= "'".$params[$i]."'";
+            } else {
+                $sql .= $params[$i];
+            }
+        }
+
+        if (true === $test) {
+            echo '<pre>';
+            echo print_r($sql);
+            echo '</pre>';
+            exit;
+        }
+
+        return $this->$function($sql);
+    }
+
     private function query($sql)
     {
         try {
@@ -278,6 +328,40 @@ class MyMssql
         }
 
         INI::write($this->RT.$this->DS.'MyMssql.ini', array('INI' => $ini));
+    }
+
+    private function sxExist($sxName)
+    {
+        $sql = '';
+        $sql .= ' SELECT COUNT(*) AS EXIST ';
+        $sql .= ' FROM SYSOBJECTS ';
+        $sql .= " WHERE ID = OBJECT_ID('".$sxName."')";
+
+        $array = parent::fetchRow($sql);
+        $count = $array['EXIST'];
+
+        return ($count > 0) ? true : false;
+    }
+
+    private function getFields($sxName)
+    {
+        $sql = '';
+        $sql .= ' SELECT ';
+        $sql .= ' COLUMNS.NAME AS COLUMNS, ';
+        $sql .= ' TYPES.NAME AS TYPE, ';
+        $sql .= ' COLUMNS.ISOUTPARAM, ';
+        $sql .= ' COLUMNS.LENGTH ';
+        $sql .= ' FROM ';
+        $sql .= ' SYSOBJECTS AS TABLES, ';
+        $sql .= ' SYSCOLUMNS AS COLUMNS, ';
+        $sql .= ' SYSTYPES AS TYPES ';
+        $sql .= ' WHERE ';
+        $sql .= ' TABLES.ID = COLUMNS.ID ';
+        $sql .= ' AND COLUMNS.USERTYPE = TYPES.USERTYPE ';
+        $sql .= " AND TABLES.NAME = '".$sxName."'";
+        $sql .= ' ORDER BY TABLES.ID ';
+
+        return parent::fetchAll($sql);
     }
 
     private function logger($str, $err = '')
