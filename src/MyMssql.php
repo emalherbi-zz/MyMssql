@@ -337,7 +337,7 @@ class MyMssql
         $sql .= ' FROM SYSOBJECTS ';
         $sql .= " WHERE ID = OBJECT_ID('".$sxName."')";
 
-        $array = parent::fetchRow($sql);
+        $array = $this->fetchRow($sql);
         $count = $array['EXIST'];
 
         return ($count > 0) ? true : false;
@@ -361,7 +361,7 @@ class MyMssql
         $sql .= " AND TABLES.NAME = '".$sxName."'";
         $sql .= ' ORDER BY TABLES.ID ';
 
-        return parent::fetchAll($sql);
+        return $this->fetchAll($sql);
     }
 
     private function logger($str, $err = '')
