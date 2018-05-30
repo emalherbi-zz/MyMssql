@@ -278,7 +278,22 @@ class MyMssql
             return 'Parameters reported differently than stored procedure parameters.';
         }
 
-        $sql = $sxName.' ';
+        $sql = '';
+        $sql .= ' BEGIN ';
+
+        for ($i = 0; $i < count($params); ++$i) {
+            $type = strtoupper($array[$i]['TYPE']);
+
+            $columns = $array[$i]['COLUMNS'];
+            $isOutParam = $array[$i]['ISOUTPARAM'];
+
+            if ($isOutParam) {
+                $sql .= ' DECLARE '.trim($columns).' DECIMAL ';
+                $sql .= ' SET '.trim($columns).' = 0 ';
+            }
+        }
+
+        $sql .= ' EXEC '.$sxName.' ';
 
         for ($i = 0; $i < count($params); ++$i) {
             if (0 !== $i) {
@@ -287,18 +302,78 @@ class MyMssql
 
             $type = strtoupper($array[$i]['TYPE']);
 
-            if (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
+            $columns = $array[$i]['COLUMNS'];
+            $isOutParam = $array[$i]['ISOUTPARAM'];
+
+            if ($isOutParam) {
+                $sql .= trim($columns).' OUTPUT ';
+            } elseif (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
                 $sql .= "'".$params[$i]."'";
             } else {
                 $sql .= $params[$i];
             }
         }
 
+        $first = true;
+        for ($i = 0; $i < count($array); ++$i) {
+            $columns = $array[$i]['COLUMNS'];
+            $isOutParam = $array[$i]['ISOUTPARAM'];
+
+            if ($isOutParam) {
+                if (false === $first) {
+                    $sql .= ', ';
+                }
+
+                if (true === $first) {
+                    $sql .= ' SELECT ';
+                }
+
+                $sql .= " $columns AS ".trim(str_replace('@', '', $columns));
+
+                $first = true;
+            }
+        }
+
+        $sql .= ' END ';
+
         if (true === $test) {
             echo '<pre>';
             echo print_r($sql);
             echo '</pre>';
             exit;
+        }
+
+        if ('exec' === $function) {
+            $hostname = $this->ini['HOSTNAME'];
+            $username = $this->ini['USERNAME'];
+            $password = $this->ini['PASSWORD'];
+            $database = $this->ini['DATABASE'];
+
+            $result = null;
+
+            if (function_exists('mssql_connect')) {
+                $conn = mssql_connect($hostname, $username, $password);
+                mssql_select_db($database, $conn);
+
+                $stmt = mssql_query($sql, $conn);
+
+                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                    $result = $row;
+                }
+            } else {
+                $connectionInfo = array('Database' => $database, 'UID' => $username, 'PWD' => $password);
+                $conn = sqlsrv_connect($hostname, $connectionInfo);
+
+                $stmt = sqlsrv_query($conn, $sql, array(), array('Scrollable' => 'static'));
+
+                do {
+                    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                        $result = $row;
+                    }
+                } while (sqlsrv_next_result($stmt));
+            }
+
+            return $result;
         }
 
         return $this->$function($sql);
