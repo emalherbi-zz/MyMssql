@@ -112,9 +112,9 @@ class MyMssql
     {
         $query = $this->query($sql);
 
-        $result = array();
+        $result = null;
         foreach ($query as $row) {
-            $result[] = $row;
+            $result = $row;
             break;
         }
 
@@ -122,7 +122,7 @@ class MyMssql
             $this->logger('MyMssql Fetch One: '.json_encode($result));
         }
 
-        return empty($result) ? false : $result[0];
+        return empty($result) ? false : array_values($result)[0];
     }
 
     public function fetchRow($sql)
