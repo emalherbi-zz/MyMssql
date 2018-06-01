@@ -334,7 +334,7 @@ class MyMssql
 
                 $sql .= " $columns AS ".str_replace('@', '', $columns);
 
-                $first = true;
+                $first = false;
             }
         }
 
