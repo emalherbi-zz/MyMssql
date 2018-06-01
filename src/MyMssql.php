@@ -282,14 +282,19 @@ class MyMssql
         $sql .= ' BEGIN ';
 
         for ($i = 0; $i < count($params); ++$i) {
-            $type = strtoupper($array[$i]['TYPE']);
-
-            $columns = $array[$i]['COLUMNS'];
+            $type = trim(strtoupper($array[$i]['TYPE']));
+            $columns = trim(strtoupper($array[$i]['COLUMNS']));
             $isOutParam = $array[$i]['ISOUTPARAM'];
 
             if ($isOutParam) {
-                $sql .= ' DECLARE '.trim($columns).' DECIMAL ';
-                $sql .= ' SET '.trim($columns).' = 0 ';
+                $sql .= ' DECLARE '.$columns.' DECIMAL ';
+                $sql .= ' SET '.$columns.' = ';
+
+                if (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
+                    $sql .= "'".$params[$i]."'";
+                } else {
+                    $sql .= $params[$i];
+                }
             }
         }
 
@@ -300,13 +305,12 @@ class MyMssql
                 $sql .= ', ';
             }
 
-            $type = strtoupper($array[$i]['TYPE']);
-
-            $columns = $array[$i]['COLUMNS'];
+            $type = trim(strtoupper($array[$i]['TYPE']));
+            $columns = trim(strtoupper($array[$i]['COLUMNS']));
             $isOutParam = $array[$i]['ISOUTPARAM'];
 
             if ($isOutParam) {
-                $sql .= trim($columns).' OUTPUT ';
+                $sql .= $columns.' OUTPUT ';
             } elseif (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
                 $sql .= "'".$params[$i]."'";
             } else {
@@ -316,7 +320,7 @@ class MyMssql
 
         $first = true;
         for ($i = 0; $i < count($array); ++$i) {
-            $columns = $array[$i]['COLUMNS'];
+            $columns = trim(strtoupper($array[$i]['COLUMNS']));
             $isOutParam = $array[$i]['ISOUTPARAM'];
 
             if ($isOutParam) {
@@ -328,7 +332,7 @@ class MyMssql
                     $sql .= ' SELECT ';
                 }
 
-                $sql .= " $columns AS ".trim(str_replace('@', '', $columns));
+                $sql .= " $columns AS ".str_replace('@', '', $columns);
 
                 $first = true;
             }
