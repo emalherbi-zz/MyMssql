@@ -122,7 +122,13 @@ class MyMssql
             $this->logger('MyMssql Fetch One: '.json_encode($result));
         }
 
-        return empty($result) ? false : array_values($result)[0];
+        $result = empty($result) ? false : array_values($result);
+
+        if (is_array($result)) {
+            return $result[0];
+        }
+
+        return false;
     }
 
     public function fetchRow($sql)
