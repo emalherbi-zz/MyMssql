@@ -383,9 +383,17 @@ class MyMssql
             if ($isOutParam) {
                 $sql .= $columns.' OUTPUT ';
             } elseif (in_array($type, array('DATETIME', 'SMALLDATETIME', 'TIMESTAMP', 'CHAR', 'NCHAR', 'SQLCHAR', 'TEXT', 'NTEXT', 'VARCHAR', 'NVARCHAR', 'SQLVARCHAR', 'BINARY', 'VARBINARY', 'IMAGE'), true)) {
-                $sql .= "'".$params[$i]."'";
+                if (empty($params[$i])) {
+                    $sql .= 'NULL';
+                } else {
+                    $sql .= "'".$params[$i]."'";
+                }
             } else {
-                $sql .= $params[$i];
+                if (empty($params[$i])) {
+                    $sql .= 'NULL';
+                } else {
+                    $sql .= $params[$i];
+                }
             }
         }
 

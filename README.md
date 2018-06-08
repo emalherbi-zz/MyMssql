@@ -26,7 +26,7 @@ try {
         'USERNAME' => 'USERNAME',
         'PASSWORD' => 'PASSWORD',
         'DATABASE' => 'DATABASE',
-    ), realpath(dirname(__FILE__)));
+    ), realpath(dirname(__FILE__)), 'UTF-8'); // Ex.: ISO-8859-1
 
     $isConnect = $mssql->isConnect();
     echo '<pre>';
