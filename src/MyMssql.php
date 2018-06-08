@@ -9,7 +9,6 @@
 namespace MyMssql;
 
 use Exception;
-use PDO;
 
 set_time_limit(0);
 
@@ -28,14 +27,17 @@ class MyMssql
     private $RT = null; // ROOT
     private $DL = null; // DIR LOG
 
+    private $type = null;
     private $db = null;
     private $ini = null;
 
-    public function __construct($ini = array(), $dl = '')
+    public function __construct($ini = array(), $dl = '', $type = 'UTF-8')
     {
         $this->DS = DIRECTORY_SEPARATOR;
         $this->RT = realpath(dirname(__FILE__));
         $this->DL = empty($dl) ? realpath(dirname(__FILE__)) : $dl;
+
+        $this->type = $type; // Ex.: ISO-8859-1
 
         if (!empty($ini)) {
             $this->setIni($ini);
@@ -43,6 +45,8 @@ class MyMssql
         $this->ini = $this->getIni();
         $this->connect();
     }
+
+    /* connnect */
 
     public function connect()
     {
@@ -63,34 +67,20 @@ class MyMssql
             $this->logger('DATABASE: '.$database);
         }
 
+        $this->ini['ADAPTER'] = (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
+
         try {
             if ('SQLSRV' === $this->ini['ADAPTER']) {
-                $driver = "sqlsrv:server=$hostname; database=$database";
+                $info = array('Database' => $database, 'UID' => $username, 'PWD' => $password);
+                $this->db = sqlsrv_connect($hostname, $info);
             } else {
-                $driver = "mssql:host=$hostname; dbname=$database";
+                $this->db = mssql_connect($hostname, $username, $password);
+                mssql_select_db($database, $this->db);
             }
-
-            $this->db = new PDO($driver, $username, $password);
-            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Connect '.$this->ini['ADAPTER'], $err);
-
-            try {
-                if ('SQLSRV' !== $this->ini['ADAPTER']) {
-                    $driver = "sqlsrv:server=$hostname; database=$database";
-                } else {
-                    $driver = "mssql:host=$hostname; dbname=$database";
-                }
-
-                $this->db = new PDO($driver, $username, $password);
-                $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            } catch (Exception $e) {
-                $err = $e->getMessage();
-                $this->logger('MyMssql Connect '.$this->ini['ADAPTER'], $err);
-
-                die(print_r($e->getMessage()));
-            }
+            die(print_r($e->getMessage()));
         }
     }
 
@@ -101,94 +91,240 @@ class MyMssql
 
     public function disconnect()
     {
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Disconnect');
-        }
+        try {
+            if ('SQLSRV' === $this->ini['ADAPTER']) {
+                sqlsrv_close($this->db);
+            } else {
+                mssql_close($this->db);
+            }
 
-        $this->db = null;
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Disconnect');
+            }
+
+            $this->db = null;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Disconnect '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
     }
+
+    /* ini */
+
+    public function getIni()
+    {
+        try {
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Get Ini');
+            }
+
+            return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Get Ini '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    /* transactions */
+
+    public function begin()
+    {
+        try {
+            $this->connect();
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Begin Transaction');
+            }
+
+            if ('SQLSRV' === $this->ini['ADAPTER']) {
+                return sqlsrv_begin_transaction($this->db);
+            }
+
+            return mssql_query('BEGIN TRANSACTION', $this->db);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Begin Transaction '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    public function commit()
+    {
+        try {
+            $this->connect();
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Commit');
+            }
+
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
+                return sqlsrv_commit($this->db);
+            }
+
+            return mssql_query('COMMIT TRANSACTION', $this->db);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Commit '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    public function rollback()
+    {
+        try {
+            $this->connect();
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql RollBack');
+            }
+
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
+                return sqlsrv_rollback($this->db);
+            }
+
+            return mssql_query('IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION', $this->db);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql RollBack '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    /* fecth */
 
     public function fetchOne($sql)
     {
-        $query = $this->query($sql);
+        try {
+            $stmt = $this->exec($sql);
 
-        $result = null;
-        foreach ($query as $row) {
-            $result = $row;
-            break;
+            if ('SQLSRV' === $this->ini['ADAPTER']) {
+                $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+            } else {
+                $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
+            }
+
+            $result = $this->setUft8($result);
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Fetch One: '.json_encode($result));
+            }
+
+            return empty($result) ? false : $result[0];
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Fetch One '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
         }
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Fetch One: '.json_encode($result));
-        }
-
-        $result = empty($result) ? false : array_values($result);
-
-        if (is_array($result)) {
-            return $result[0];
-        }
-
-        return false;
     }
 
     public function fetchRow($sql)
     {
-        $query = $this->query($sql);
+        try {
+            $stmt = $this->exec($sql);
 
-        $result = array();
-        foreach ($query as $row) {
-            $result[] = $row;
-            break;
+            if ('SQLSRV' === $this->ini['ADAPTER']) {
+                $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+            } else {
+                $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
+            }
+
+            $result = $this->setUft8($result);
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Fetch Row: '.json_encode($result));
+            }
+
+            return empty($result) ? false : $result;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Fetch Row '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
         }
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Fetch Row: '.json_encode($result));
-        }
-
-        return empty($result) ? false : $result[0];
-    }
-
-    public function fetchRowSx($sxName, $params, $test = false)
-    {
-        return $this->querySx($sxName, $params, $test, 'fetchRow');
     }
 
     public function fetchAll($sql)
     {
-        $query = $this->query($sql);
+        try {
+            $stmt = $this->exec($sql);
 
-        $result = array();
-        foreach ($query as $row) {
-            $result[] = $row;
+            $result = array();
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
+                while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                    $row = $this->setUft8($row);
+                    $result[] = $row;
+                }
+            } else {
+                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                    $row = $this->setUft8($row);
+                    $result[] = $row;
+                }
+            }
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Fetch All: '.json_encode($result));
+            }
+
+            return empty($result) ? false : $result;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Fetch All '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
         }
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Fetch All: '.json_encode($result));
-        }
-
-        return empty($result) ? false : $result;
     }
 
-    public function fetchAllSx($sxName, $params, $test = false)
-    {
-        return $this->querySx($sxName, $params, $test, 'fetchAll');
-    }
+    /* exec */
 
     public function exec($sql)
     {
         try {
             $this->connect();
 
+            if ('UTF-8' !== $this->type) {
+                $sql = iconv('UTF-8', $this->type, $sql);
+            }
+
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
+                $stmt = sqlsrv_query($this->db, $sql, array(), array('Scrollable' => 'static'));
+            } else {
+                $stmt = mssql_query($sql, $this->db);
+            }
+
             if (true == $this->ini['VERBOSE']) {
                 $this->logger('MyMssql Exec: '.$sql);
             }
 
-            return $this->db->exec($sql);
+            return $stmt;
         } catch (Exception $e) {
             $err = $e->getMessage();
-            $this->logger($sql, $err);
+            $this->logger('MyMssql Exec '.$this->ini['ADAPTER'], $err);
             die(print_r($e->getMessage()));
         }
+    }
+
+    public function execScript($sql)
+    {
+        try {
+            $stmt = $this->exec($sql);
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Exec Script: '.$sql);
+            }
+
+            return $stmt;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Exec Script '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    /* sx */
+
+    public function fetchAllSx($sxName, $params, $test = false)
+    {
+        return $this->querySx($sxName, $params, $test, 'fetchAll');
     }
 
     public function execSx($sxName, $params, $test = false)
@@ -196,80 +332,9 @@ class MyMssql
         return $this->querySx($sxName, $params, $test, 'exec');
     }
 
-    public function execScript($sql)
+    public function fetchRowSx($sxName, $params, $test = false)
     {
-        try {
-            $this->connect();
-
-            if (true == $this->ini['VERBOSE']) {
-                $this->logger('MyMssql Exec Script: '.$sql);
-            }
-
-            $stmt = $this->db->prepare($sql);
-            $stmt = $stmt->execute();
-
-            $this->disconnect();
-
-            return $stmt;
-        } catch (Exception $e) {
-            $err = $e->getMessage();
-            $this->logger($sql, $err);
-            die(print_r($e->getMessage()));
-        }
-    }
-
-    public function begin()
-    {
-        $this->connect();
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Begin Transaction');
-        }
-
-        if ('SQLSRV' === $this->ini['ADAPTER']) {
-            $this->db->beginTransaction();
-        } else {
-            $this->logger('MyMssql Begin Transaction Only Works in SQLSRV ADAPTER');
-        }
-    }
-
-    public function commit()
-    {
-        $this->connect();
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Commit');
-        }
-
-        if ('SQLSRV' === $this->ini['ADAPTER']) {
-            $this->db->commit();
-        } else {
-            $this->logger('MyMssql Commit Only Works in SQLSRV ADAPTER');
-        }
-    }
-
-    public function rollback()
-    {
-        $this->connect();
-
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql RollBack');
-        }
-
-        if ('SQLSRV' === $this->ini['ADAPTER']) {
-            $this->db->rollBack();
-        } else {
-            $this->logger('MyMssql RollBack Only Works in SQLSRV ADAPTER');
-        }
-    }
-
-    public function getIni()
-    {
-        if (true == $this->ini['VERBOSE']) {
-            $this->logger('MyMssql Get Ini');
-        }
-
-        return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
+        return $this->querySx($sxName, $params, $test, 'fetchRow');
     }
 
     private function querySx($sxName, $params, $test = false, $function = 'exec')
@@ -354,33 +419,21 @@ class MyMssql
         }
 
         if ('exec' === $function) {
-            $hostname = $this->ini['HOSTNAME'];
-            $username = $this->ini['USERNAME'];
-            $password = $this->ini['PASSWORD'];
-            $database = $this->ini['DATABASE'];
+            $stmt = $this->exec($sql);
 
-            $result = null;
-
-            if (function_exists('mssql_connect')) {
-                $conn = mssql_connect($hostname, $username, $password);
-                mssql_select_db($database, $conn);
-
-                $stmt = mssql_query($sql, $conn);
-
-                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
-                    $result = $row;
-                }
-            } else {
-                $connectionInfo = array('Database' => $database, 'UID' => $username, 'PWD' => $password);
-                $conn = sqlsrv_connect($hostname, $connectionInfo);
-
-                $stmt = sqlsrv_query($conn, $sql, array(), array('Scrollable' => 'static'));
-
+            $result = false;
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 do {
                     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                        $row = $this->setUft8($row);
                         $result = $row;
                     }
                 } while (sqlsrv_next_result($stmt));
+            } else {
+                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                    $row = $this->setUft8($row);
+                    $result = $row;
+                }
             }
 
             return $result;
@@ -389,22 +442,7 @@ class MyMssql
         return $this->$function($sql);
     }
 
-    private function query($sql)
-    {
-        try {
-            $this->connect();
-
-            if (true == $this->ini['VERBOSE']) {
-                $this->logger('MyMssql Query: '.$sql);
-            }
-
-            return $this->db->query($sql, PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            $err = $e->getMessage();
-            $this->logger($sql, $err);
-            die(print_r($e->getMessage()));
-        }
-    }
+    /* private */
 
     private function setIni($ini = array())
     {
@@ -447,6 +485,23 @@ class MyMssql
         $sql .= ' ORDER BY TABLES.ID ';
 
         return $this->fetchAll($sql);
+    }
+
+    private function setUft8($result)
+    {
+        if ('UTF-8' !== $this->type && !empty($result) && is_array($result)) {
+            foreach ($result as $key => $value) {
+                if ('string' == gettype($value)) {
+                    if ('array' == gettype($result)) {
+                        $result[$key] = iconv($this->type, 'UTF-8', $value);
+                    } elseif ('object' == gettype($result)) {
+                        $result->$key = iconv($this->type, 'UTF-8', $value);
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     private function logger($str, $err = '')
