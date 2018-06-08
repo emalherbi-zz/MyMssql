@@ -200,9 +200,9 @@ class MyMssql
             $stmt = $this->exec($sql);
 
             if ('SQLSRV' === $this->ini['ADAPTER']) {
-                $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+                $result = sqlsrv_fetch_array($stmt);
             } else {
-                $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
+                $result = mssql_fetch_array($stmt);
             }
 
             $result = $this->setUft8($result);
