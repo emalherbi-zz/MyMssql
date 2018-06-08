@@ -78,7 +78,7 @@ try {
     echo print_r($result);
     echo '</pre>';
 
-    $result = $mssql->execScript("IF OBJECT_ID('USUARIOS') IS NULL
+    $result = $mssql->exec("IF OBJECT_ID('USUARIOS') IS NULL
         BEGIN
             CREATE TABLE [dbo].[USUARIOS]
             (
