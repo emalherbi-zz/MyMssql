@@ -389,7 +389,10 @@ class MyMssql
                     $sql .= "'".$params[$i]."'";
                 }
             } else {
-                if (empty($params[$i])) {
+                $params[$i] = (int) $params[$i];
+                if (0 === $params[$i]) {
+                    $sql .= 0;
+                } elseif (empty($params[$i])) {
                     $sql .= 'NULL';
                 } else {
                     $sql .= $params[$i];
