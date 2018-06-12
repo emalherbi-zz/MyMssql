@@ -28,31 +28,31 @@ try {
         'DATABASE' => 'DATABASE',
     ), realpath(dirname(__FILE__)), 'UTF-8'); // Ex.: ISO-8859-1
 
-    $isConnect = $mssql->isConnect();
+    $result = $mssql->isConnect();
     echo '<pre>';
-    echo print_r($isConnect);
+    echo print_r($result);
     echo '</pre>';   
 
-    $row = $mssql->fetchRow('SELECT * FROM CLIENTES');
+    $result = $mssql->fetchRow('SELECT * FROM CLIENTES');
     echo '<pre>';
-    echo print_r($row);
+    echo print_r($result);
     echo '</pre>';
 
-    $all = $mssql->fetchAll('SELECT TOP 5 * FROM CLIENTES');
+    $result = $mssql->fetchAll('SELECT TOP 5 * FROM CLIENTES');
     echo '<pre>';
-    echo print_r($all);
+    echo print_r($result);
     echo '</pre>';
 
-    $exec = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 123\' WHERE ID_CLIENTE = 450');
+    $result = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 123\' WHERE ID_CLIENTE = 450');
     echo '<pre>';
-    echo print_r($exec);
+    echo print_r($result);
     echo '</pre>';
 
     $mssql->begin();
 
-    $exec = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 456\' WHERE ID_CLIENTE = 450');
+    $result = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 456\' WHERE ID_CLIENTE = 450');
     echo '<pre>';
-    echo print_r($exec);
+    echo print_r($result);
     echo '</pre>';
 
     $mssql->commit();
