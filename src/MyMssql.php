@@ -197,7 +197,7 @@ class MyMssql
     public function fetchOne($sql)
     {
         try {
-            $stmt = $this->exec($sql);
+            $stmt = $this->query($sql);
 
             if ('SQLSRV' === $this->ini['ADAPTER']) {
                 $result = sqlsrv_fetch_array($stmt);
@@ -222,7 +222,7 @@ class MyMssql
     public function fetchRow($sql)
     {
         try {
-            $stmt = $this->exec($sql);
+            $stmt = $this->query($sql);
 
             if ('SQLSRV' === $this->ini['ADAPTER']) {
                 $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
@@ -247,7 +247,7 @@ class MyMssql
     public function fetchAll($sql)
     {
         try {
-            $stmt = $this->exec($sql);
+            $stmt = $this->query($sql);
 
             $result = array();
             if ('SQLSRV' == $this->ini['ADAPTER']) {
@@ -274,9 +274,9 @@ class MyMssql
         }
     }
 
-    /* exec */
+    /* query */
 
-    public function exec($sql)
+    public function query($sql)
     {
         try {
             $this->connect();
@@ -292,10 +292,27 @@ class MyMssql
             }
 
             if (true == $this->ini['VERBOSE']) {
-                $this->logger('MyMssql Exec: '.$sql);
+                $this->logger('MyMssql Query: '.$sql);
             }
 
             return $stmt;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Query '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    public function exec($sql)
+    {
+        try {
+            $stmt = $this->query($sql);
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Exec: '.$sql);
+            }
+
+            return empty($stmt) ? false : true;
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Exec '.$this->ini['ADAPTER'], $err);
@@ -306,7 +323,7 @@ class MyMssql
     public function execScript($sql)
     {
         try {
-            $stmt = $this->exec($sql);
+            $stmt = $this->query($sql);
 
             if (true == $this->ini['VERBOSE']) {
                 $this->logger('MyMssql Exec Script: '.$sql);
@@ -429,7 +446,7 @@ class MyMssql
         }
 
         if ('exec' === $function) {
-            $stmt = $this->exec($sql);
+            $stmt = $this->query($sql);
 
             $result = false;
             if ('SQLSRV' == $this->ini['ADAPTER']) {
