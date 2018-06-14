@@ -236,7 +236,7 @@ class MyMssql
                 $this->logger('MyMssql Fetch Row: '.json_encode($result));
             }
 
-            return empty($result) ? false : $result;
+            return empty($result) ? array() : $result;
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Fetch Row '.$this->ini['ADAPTER'], $err);
@@ -266,7 +266,7 @@ class MyMssql
                 $this->logger('MyMssql Fetch All: '.json_encode($result));
             }
 
-            return empty($result) ? false : $result;
+            return empty($result) ? array() : $result;
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Fetch All '.$this->ini['ADAPTER'], $err);
