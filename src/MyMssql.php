@@ -205,7 +205,7 @@ class MyMssql
                 $result = mssql_fetch_array($stmt);
             }
 
-            $result = $this->setUft8($result);
+            $result = $this->getResult($result);
 
             if (true == $this->ini['VERBOSE']) {
                 $this->logger('MyMssql Fetch One: '.json_encode($result));
@@ -230,7 +230,7 @@ class MyMssql
                 $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
             }
 
-            $result = $this->setUft8($result);
+            $result = $this->getResult($result);
 
             if (true == $this->ini['VERBOSE']) {
                 $this->logger('MyMssql Fetch Row: '.json_encode($result));
@@ -252,12 +252,12 @@ class MyMssql
             $result = array();
             if ('SQLSRV' == $this->ini['ADAPTER']) {
                 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                    $row = $this->setUft8($row);
+                    $row = $this->getResult($row);
                     $result[] = $row;
                 }
             } else {
                 while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
-                    $row = $this->setUft8($row);
+                    $row = $this->getResult($row);
                     $result[] = $row;
                 }
             }
@@ -452,13 +452,13 @@ class MyMssql
             if ('SQLSRV' == $this->ini['ADAPTER']) {
                 do {
                     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                        $row = $this->setUft8($row);
+                        $row = $this->getResult($row);
                         $result = $row;
                     }
                 } while (sqlsrv_next_result($stmt));
             } else {
                 while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
-                    $row = $this->setUft8($row);
+                    $row = $this->getResult($row);
                     $result = $row;
                 }
             }
@@ -514,15 +514,23 @@ class MyMssql
         return $this->fetchAll($sql);
     }
 
-    private function setUft8($result)
+    private function getResult($result)
     {
-        if ('UTF-8' !== $this->type && !empty($result) && is_array($result)) {
+        if (!empty($result) && is_array($result)) {
             foreach ($result as $key => $value) {
-                if ('string' == gettype($value)) {
-                    if ('array' == gettype($result)) {
+                if (('UTF-8' !== $this->type) && ('string' === gettype($value))) {
+                    if ('array' === gettype($result)) {
                         $result[$key] = iconv($this->type, 'UTF-8', $value);
-                    } elseif ('object' == gettype($result)) {
+                    } elseif ('object' === gettype($result)) {
                         $result->$key = iconv($this->type, 'UTF-8', $value);
+                    }
+                }
+
+                if (('object' === gettype($value)) && (is_a($value, 'DateTime'))) {
+                    if ('array' === gettype($result)) {
+                        $result[$key] = $value->format('Y-m-d H:i:s');
+                    } elseif ('object' === gettype($result)) {
+                        $result->$key = $value->format('Y-m-d H:i:s');
                     }
                 }
             }
