@@ -70,7 +70,7 @@ class MyMssql
         $this->ini['ADAPTER'] = (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
 
         try {
-            if ('SQLSRV' === $this->ini['ADAPTER']) {
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 $info = array('Database' => $database, 'UID' => $username, 'PWD' => $password);
                 $this->db = sqlsrv_connect($hostname, $info);
             } else {
@@ -92,7 +92,7 @@ class MyMssql
     public function disconnect()
     {
         try {
-            if ('SQLSRV' === $this->ini['ADAPTER']) {
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 sqlsrv_close($this->db);
             } else {
                 mssql_close($this->db);
@@ -138,7 +138,7 @@ class MyMssql
                 $this->logger('MyMssql Begin Transaction');
             }
 
-            if ('SQLSRV' === $this->ini['ADAPTER']) {
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 return sqlsrv_begin_transaction($this->db);
             }
 
@@ -199,7 +199,7 @@ class MyMssql
         try {
             $stmt = $this->query($sql);
 
-            if ('SQLSRV' === $this->ini['ADAPTER']) {
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 $result = sqlsrv_fetch_array($stmt);
             } else {
                 $result = mssql_fetch_array($stmt);
@@ -224,7 +224,7 @@ class MyMssql
         try {
             $stmt = $this->query($sql);
 
-            if ('SQLSRV' === $this->ini['ADAPTER']) {
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
                 $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
             } else {
                 $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
@@ -281,7 +281,7 @@ class MyMssql
         try {
             $this->connect();
 
-            if ('UTF-8' !== $this->type) {
+            if ('UTF-8' != $this->type) {
                 $sql = iconv('UTF-8', $this->type, $sql);
             }
 
@@ -356,13 +356,13 @@ class MyMssql
 
     private function querySx($sxName, $params, $test = false, $function = 'exec')
     {
-        if (false === $this->sxExist($sxName)) {
+        if (false == $this->sxExist($sxName)) {
             return 'Stored Procedure '.$sxName.' not find.';
         }
 
         $array = $this->getFields($sxName);
 
-        if (count($params) !== count($array)) {
+        if (count($params) != count($array)) {
             return 'Parameters reported differently than stored procedure parameters.';
         }
 
@@ -389,7 +389,7 @@ class MyMssql
         $sql .= ' EXEC '.$sxName.' ';
 
         for ($i = 0; $i < count($params); ++$i) {
-            if (0 !== $i) {
+            if (0 != $i) {
                 $sql .= ', ';
             }
 
@@ -406,7 +406,7 @@ class MyMssql
                     $sql .= "'".$params[$i]."'";
                 }
             } else {
-                if ('0' === $params[$i] || 0 === $params[$i]) {
+                if ('0' == $params[$i] || 0 == $params[$i]) {
                     $sql .= 0;
                 } elseif (empty($params[$i])) {
                     $sql .= 'NULL';
@@ -422,11 +422,11 @@ class MyMssql
             $isOutParam = $array[$i]['ISOUTPARAM'];
 
             if ($isOutParam) {
-                if (false === $first) {
+                if (false == $first) {
                     $sql .= ', ';
                 }
 
-                if (true === $first) {
+                if (true == $first) {
                     $sql .= ' SELECT ';
                 }
 
@@ -438,14 +438,14 @@ class MyMssql
 
         $sql .= ' END ';
 
-        if (true === $test) {
+        if (true == $test) {
             echo '<pre>';
             echo print_r($sql);
             echo '</pre>';
             exit;
         }
 
-        if ('exec' === $function) {
+        if ('exec' == $function) {
             $stmt = $this->query($sql);
 
             $result = false;
@@ -518,18 +518,18 @@ class MyMssql
     {
         if (!empty($result) && is_array($result)) {
             foreach ($result as $key => $value) {
-                if (('UTF-8' !== $this->type) && ('string' === gettype($value))) {
-                    if ('array' === gettype($result)) {
+                if (('UTF-8' != $this->type) && ('string' == gettype($value))) {
+                    if ('array' == gettype($result)) {
                         $result[$key] = iconv($this->type, 'UTF-8', $value);
-                    } elseif ('object' === gettype($result)) {
+                    } elseif ('object' == gettype($result)) {
                         $result->$key = iconv($this->type, 'UTF-8', $value);
                     }
                 }
 
-                if (('object' === gettype($value)) && (is_a($value, 'DateTime'))) {
-                    if ('array' === gettype($result)) {
+                if (('object' == gettype($value)) && (is_a($value, 'DateTime'))) {
+                    if ('array' == gettype($result)) {
                         $result[$key] = $value->format('Y-m-d H:i:s');
-                    } elseif ('object' === gettype($result)) {
+                    } elseif ('object' == gettype($result)) {
                         $result->$key = $value->format('Y-m-d H:i:s');
                     }
                 }
