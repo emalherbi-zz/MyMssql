@@ -449,17 +449,21 @@ class MyMssql
             $stmt = $this->query($sql);
 
             $result = false;
-            if ('SQLSRV' == $this->ini['ADAPTER']) {
-                do {
-                    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+            if (is_bool($stmt)) {
+                $result = $stmt;
+            } else {
+                if ('SQLSRV' == $this->ini['ADAPTER']) {
+                    do {
+                        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                            $row = $this->getResult($row);
+                            $result = $row;
+                        }
+                    } while (sqlsrv_next_result($stmt));
+                } else {
+                    while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
                         $row = $this->getResult($row);
                         $result = $row;
                     }
-                } while (sqlsrv_next_result($stmt));
-            } else {
-                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
-                    $row = $this->getResult($row);
-                    $result = $row;
                 }
             }
 
