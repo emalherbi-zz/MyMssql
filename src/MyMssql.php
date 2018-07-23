@@ -72,10 +72,10 @@ class MyMssql
         try {
             if ('SQLSRV' == $this->ini['ADAPTER']) {
                 $info = array('Database' => $database, 'UID' => $username, 'PWD' => $password);
-                $this->db = sqlsrv_connect($hostname, $info);
+                $this->db = @sqlsrv_connect($hostname, $info);
             } else {
-                $this->db = mssql_connect($hostname, $username, $password);
-                mssql_select_db($database, $this->db);
+                $this->db = @mssql_connect($hostname, $username, $password);
+                @mssql_select_db($database, $this->db);
             }
         } catch (Exception $e) {
             $err = $e->getMessage();
