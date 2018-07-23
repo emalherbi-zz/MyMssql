@@ -67,7 +67,7 @@ class MyMssql
             $this->logger('DATABASE: '.$database);
         }
 
-        $this->ini['ADAPTER'] = (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
+        $this->ini['ADAPTER'] = $this->getAdapter();
 
         try {
             if ('SQLSRV' == $this->ini['ADAPTER']) {
@@ -82,6 +82,11 @@ class MyMssql
             $this->logger('MyMssql Connect '.$this->ini['ADAPTER'], $err);
             die(print_r($e->getMessage()));
         }
+    }
+
+    public function getAdapter()
+    {
+        return (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
     }
 
     public function isConnect()
