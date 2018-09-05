@@ -55,7 +55,7 @@ try {
     echo print_r($result);
     echo '</pre>';
 
-$mssql->begin();
+    $mssql->begin();
 
     $result = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 456\' WHERE ID_CLIENTE = 450');
     echo '<pre>';
