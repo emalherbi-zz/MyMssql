@@ -325,6 +325,11 @@ class MyMssql
         }
     }
 
+    public function execSql($sql)
+    {
+        return $this->exec($sql);
+    }
+
     public function execScript($sql)
     {
         try {

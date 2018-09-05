@@ -48,7 +48,14 @@ try {
     echo print_r($result);
     echo '</pre>';
 
-    $mssql->begin();
+    // OR
+
+    $result = $mssql->execSql('UPDATE CLIENTES SET NOME = \'TESTE 123\' WHERE ID_CLIENTE = 450');
+    echo '<pre>';
+    echo print_r($result);
+    echo '</pre>';
+
+$mssql->begin();
 
     $result = $mssql->exec('UPDATE CLIENTES SET NOME = \'TESTE 456\' WHERE ID_CLIENTE = 450');
     echo '<pre>';
