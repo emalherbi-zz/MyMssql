@@ -547,6 +547,20 @@ class MyMssql
                         $result->$key = $value->format('Y-m-d H:i:s');
                     }
                 }
+
+                if (is_int($value) && ($value <= 0)) {
+                    if ('array' == gettype($result)) {
+                        $result[$key] = 0;
+                    } elseif ('object' == gettype($result)) {
+                        $result->$key = 0;
+                    }
+                } elseif (is_numeric($value) && ($value <= 0)) {
+                    if ('array' == gettype($result)) {
+                        $result[$key] = '0.00';
+                    } elseif ('object' == gettype($result)) {
+                        $result->$key = '0.00';
+                    }
+                }
             }
         }
 
