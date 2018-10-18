@@ -548,13 +548,13 @@ class MyMssql
                     }
                 }
 
-                if (is_int($value) && ($value <= 0)) {
+                if (is_int($value) && (0 == $value)) {
                     if ('array' == gettype($result)) {
                         $result[$key] = 0;
                     } elseif ('object' == gettype($result)) {
                         $result->$key = 0;
                     }
-                } elseif (is_numeric($value) && ($value <= 0)) {
+                } elseif (is_numeric($value) && (0 == $value)) {
                     if ('array' == gettype($result)) {
                         $result[$key] = '0.00';
                     } elseif ('object' == gettype($result)) {
