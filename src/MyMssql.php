@@ -366,6 +366,10 @@ class MyMssql
                 $this->logger('MyMssql Exec Script Result: '.$sql);
             }
 
+            if (is_bool($stmt)) {
+                return $stmt;
+            }
+
             $result = array();
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
