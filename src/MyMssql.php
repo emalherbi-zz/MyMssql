@@ -46,6 +46,18 @@ class MyMssql
         $this->connect();
     }
 
+    public function getAdapter()
+    {
+        return (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
+    }
+
+    /* is connnect */
+
+    public function isConnect()
+    {
+        return empty($this->db) ? false : true;
+    }
+
     /* connnect */
 
     public function connect()
@@ -84,15 +96,7 @@ class MyMssql
         }
     }
 
-    public function getAdapter()
-    {
-        return (function_exists('mssql_connect')) ? 'MSSQL' : 'SQLSRV';
-    }
-
-    public function isConnect()
-    {
-        return empty($this->db) ? false : true;
-    }
+    /* disconnect */
 
     public function disconnect()
     {
@@ -308,6 +312,8 @@ class MyMssql
         }
     }
 
+    /* exec */
+
     public function exec($sql)
     {
         try {
@@ -330,6 +336,8 @@ class MyMssql
         return $this->exec($sql);
     }
 
+    /* exec script */
+
     public function execScript($sql)
     {
         try {
@@ -343,6 +351,49 @@ class MyMssql
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Exec Script '.$this->ini['ADAPTER'], $err);
+            die(print_r($e->getMessage()));
+        }
+    }
+
+    /* exec script result */
+
+    public function execScriptResult($sql, $isObject = false)
+    {
+        try {
+            $stmt = $this->query($sql);
+
+            if (true == $this->ini['VERBOSE']) {
+                $this->logger('MyMssql Exec Script Result: '.$sql);
+            }
+
+            if ('SQLSRV' == $this->ini['ADAPTER']) {
+                do {
+                    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                        $row = $this->getResult($row);
+                        if (true == $isObject) {
+                            $row = (object) $row;
+                        }
+                        $result[] = $row;
+                    }
+                } while (sqlsrv_next_result($stmt));
+            } else {
+                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                    $row = $this->getResult($row);
+                    if (true == $isObject) {
+                        $row = (object) $row;
+                    }
+                    $result[] = $row;
+                }
+            }
+
+            if (1 === count($result)) {
+                return $result[0];
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $this->logger('MyMssql Exec Script Result '.$this->ini['ADAPTER'], $err);
             die(print_r($e->getMessage()));
         }
     }
