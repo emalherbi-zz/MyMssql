@@ -114,17 +114,17 @@ try {
     echo '</pre>';    
 
     $sql = " BEGIN DECLARE @REF INT SET @REF = NULL EXEC SX_TESTE @REF OUTPUT SELECT @REF AS REF END ";
-	$result = $mssql->execScript($sql);		   		
-	echo '<pre>';
-	echo print_r($result);
+    $result = $mssql->execScript($sql);		   		
+    echo '<pre>';
+    echo print_r($result);
     echo '</pre>';
     
     $sql = " BEGIN DECLARE @REF INT SET @REF = NULL EXEC SX_TESTE @REF OUTPUT SELECT @REF AS REF END ";
     $isObject = false; // Array or Object Result
-	$result = $mssql->execScriptResult($sql, $isObject);		   		
-	echo '<pre>';
-	echo print_r($result);
-	echo '</pre>';
+    $result = $mssql->execScriptResult($sql, $isObject);		   		
+    echo '<pre>';
+    echo print_r($result);
+    echo '</pre>';
 
     echo 'Success...';
 } catch (Exception $e) {

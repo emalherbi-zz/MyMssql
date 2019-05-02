@@ -366,6 +366,8 @@ class MyMssql
                 $this->logger('MyMssql Exec Script Result: '.$sql);
             }
 
+            $result = array();
+
             if ('SQLSRV' == $this->ini['ADAPTER']) {
                 do {
                     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
