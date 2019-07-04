@@ -576,8 +576,8 @@ class MyMssql
         $sql .= ' SYSOBJECTS AS TABLES, ';
         $sql .= ' SYSCOLUMNS AS COLUMNS, ';
         $sql .= ' SYSTYPES AS TYPES ';
-        $sql .= ' WHERE ';
-        $sql .= ' TABLES.ID = COLUMNS.ID ';
+        $sql .= ' WHERE TABLES.ID = COLUMNS.ID ';
+        $sql .= ' AND COLUMNS.XTYPE = TYPES.XTYPE ';
         $sql .= ' AND COLUMNS.USERTYPE = TYPES.USERTYPE ';
         $sql .= " AND TABLES.NAME = '".$sxName."'";
         $sql .= ' ORDER BY TABLES.ID ';
