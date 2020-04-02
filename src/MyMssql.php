@@ -40,10 +40,24 @@ class MyMssql
         $this->type = $type; // Ex.: ISO-8859-1
 
         if (!empty($ini)) {
+            $ini = $this->validateIni($ini);
             $this->setIni($ini);
         }
         $this->ini = $this->getIni();
+        $this->ini = $this->validateIni($this->ini);
+
         $this->connect();
+    }
+
+    public function validateIni($ini)
+    {
+        if (array_key_exists('VERBOSE', $ini)) {
+            if (!isset($ini['VERBOSE'])) {
+                $ini['VERBOSE'] = false;
+            }
+        }
+
+        return $ini;
     }
 
     public function getAdapter()
@@ -102,9 +116,9 @@ class MyMssql
     {
         try {
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                sqlsrv_close($this->db);
+                @sqlsrv_close($this->db);
             } else {
-                mssql_close($this->db);
+                @mssql_close($this->db);
             }
 
             if (true == $this->ini['VERBOSE']) {
@@ -148,10 +162,10 @@ class MyMssql
             }
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                return sqlsrv_begin_transaction($this->db);
+                return @sqlsrv_begin_transaction($this->db);
             }
 
-            return mssql_query('BEGIN TRANSACTION', $this->db);
+            return @mssql_query('BEGIN TRANSACTION', $this->db);
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Begin Transaction '.$this->ini['ADAPTER'], $err);
@@ -169,10 +183,10 @@ class MyMssql
             }
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                return sqlsrv_commit($this->db);
+                return @sqlsrv_commit($this->db);
             }
 
-            return mssql_query('COMMIT TRANSACTION', $this->db);
+            return @mssql_query('COMMIT TRANSACTION', $this->db);
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql Commit '.$this->ini['ADAPTER'], $err);
@@ -190,10 +204,10 @@ class MyMssql
             }
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                return sqlsrv_rollback($this->db);
+                return @sqlsrv_rollback($this->db);
             }
 
-            return mssql_query('IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION', $this->db);
+            return @mssql_query('IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION', $this->db);
         } catch (Exception $e) {
             $err = $e->getMessage();
             $this->logger('MyMssql RollBack '.$this->ini['ADAPTER'], $err);
@@ -209,9 +223,9 @@ class MyMssql
             $stmt = $this->query($sql);
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                $result = sqlsrv_fetch_array($stmt);
+                $result = @sqlsrv_fetch_array($stmt);
             } else {
-                $result = mssql_fetch_array($stmt);
+                $result = @mssql_fetch_array($stmt);
             }
 
             $result = $this->getResult($result);
@@ -234,9 +248,9 @@ class MyMssql
             $stmt = $this->query($sql);
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                $result = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+                $result = @sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
             } else {
-                $result = mssql_fetch_array($stmt, MSSQL_ASSOC);
+                $result = @mssql_fetch_array($stmt, MSSQL_ASSOC);
             }
 
             $result = $this->getResult($result);
@@ -260,12 +274,12 @@ class MyMssql
 
             $result = array();
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                while ($row = @sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
                     $row = $this->getResult($row);
                     $result[] = $row;
                 }
             } else {
-                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                while ($row = @mssql_fetch_array($stmt, MSSQL_ASSOC)) {
                     $row = $this->getResult($row);
                     $result[] = $row;
                 }
@@ -295,9 +309,9 @@ class MyMssql
             }
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
-                $stmt = sqlsrv_query($this->db, $sql, array(), array('Scrollable' => 'static'));
+                $stmt = @sqlsrv_query($this->db, $sql, array(), array('Scrollable' => 'static'));
             } else {
-                $stmt = mssql_query($sql, $this->db);
+                $stmt = @mssql_query($sql, $this->db);
             }
 
             if (true == $this->ini['VERBOSE']) {
@@ -374,7 +388,7 @@ class MyMssql
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
                 do {
-                    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                    while ($row = @sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
                         $row = $this->getResult($row);
                         if (true == $isObject) {
                             $row = (object) $row;
@@ -383,7 +397,7 @@ class MyMssql
                     }
                 } while (sqlsrv_next_result($stmt));
             } else {
-                while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                while ($row = @mssql_fetch_array($stmt, MSSQL_ASSOC)) {
                     $row = $this->getResult($row);
                     if (true == $isObject) {
                         $row = (object) $row;
@@ -521,13 +535,13 @@ class MyMssql
             } else {
                 if ('SQLSRV' == $this->ini['ADAPTER']) {
                     do {
-                        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                        while ($row = @sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
                             $row = $this->getResult($row);
                             $result = $row;
                         }
                     } while (sqlsrv_next_result($stmt));
                 } else {
-                    while ($row = mssql_fetch_array($stmt, MSSQL_ASSOC)) {
+                    while ($row = @mssql_fetch_array($stmt, MSSQL_ASSOC)) {
                         $row = $this->getResult($row);
                         $result = $row;
                     }
@@ -638,7 +652,7 @@ class MyMssql
             $log .= "[ERROR] > $err \n\n";
         }
 
-        $file = fopen($this->DL.$this->DS."log-$date.txt", 'a+b');
+        $file = fopen($this->DL.$this->DS."log-$date.txt", 'a+');
         fwrite($file, $log);
         fclose($file);
     }

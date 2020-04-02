@@ -20,7 +20,7 @@ class INI
             $string .= self::write_get_string($ini[$key], '').self::RETURN_NEWLINE;
         }
 
-        file_put_contents($filename, $string);
+        @file_put_contents($filename, $string);
     }
 
     public static function write_get_string(&$ini, $prefix)
