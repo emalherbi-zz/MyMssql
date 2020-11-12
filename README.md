@@ -23,29 +23,29 @@ try {
         'DATABASE' => 'DATABASE',
     ), realpath(dirname(__FILE__)), 'UTF-8'); // Ex.: ISO-8859-1
 
-    $mssql->connect();   
+    $mssql->connect();
 
     $mssql->disconnect();
 
     $result = $mssql->getAdapter();
     echo '<pre>';
     echo print_r($result);
-    echo '</pre>';  
-    
+    echo '</pre>';
+
     $result = $mssql->getIni();
     echo '<pre>';
     echo print_r($result);
-    echo '</pre>';      
-    
+    echo '</pre>';
+
     $result = $mssql->isConnect();
     echo '<pre>';
     echo print_r($result);
-    echo '</pre>';   
+    echo '</pre>';
 
     $result = $mssql->fetchOne('SELECT * FROM CLIENTES');
     echo '<pre>';
     echo print_r($result);
-    echo '</pre>';    
+    echo '</pre>';
 
     $result = $mssql->fetchRow('SELECT * FROM CLIENTES');
     echo '<pre>';
@@ -111,17 +111,17 @@ try {
         END");
     echo '<pre>';
     echo print_r($result);
-    echo '</pre>';    
+    echo '</pre>';
 
     $sql = " BEGIN DECLARE @REF INT SET @REF = NULL EXEC SX_TESTE @REF OUTPUT SELECT @REF AS REF END ";
-    $result = $mssql->execScript($sql);		   		
+    $result = $mssql->execScript($sql);
     echo '<pre>';
     echo print_r($result);
     echo '</pre>';
-    
+
     $sql = " BEGIN DECLARE @REF INT SET @REF = NULL EXEC SX_TESTE @REF OUTPUT SELECT @REF AS REF END ";
     $isObject = false; // Array or Object Result
-    $result = $mssql->execScriptResult($sql, $isObject);		   		
+    $result = $mssql->execScriptResult($sql, $isObject);
     echo '<pre>';
     echo print_r($result);
     echo '</pre>';
@@ -133,4 +133,3 @@ try {
     die(print_r($e->getMessage()));
 }
 ```
-
