@@ -41,9 +41,8 @@ class MyMssql
 
         if (!empty($ini)) {
             $ini = $this->validateIni($ini);
-            // $this->setIni($ini);
         }
-        $this->ini = $ini; // $this->getIni();
+        $this->ini = $ini;
         $this->ini = $this->validateIni($this->ini);
 
         $this->connect();
@@ -138,11 +137,6 @@ class MyMssql
     public function getIni()
     {
         try {
-            // if (true == $this->ini['VERBOSE']) {
-            //     $this->logger('MyMssql Get Ini');
-            // }
-
-            // return parse_ini_file($this->RT.$this->DS.'MyMssql.ini');
             return $this->ini;
         } catch (Exception $e) {
             $err = $e->getMessage();
@@ -306,7 +300,7 @@ class MyMssql
             $this->connect();
 
             if ('UTF-8' != $this->type) {
-                $sql = iconv('UTF-8', $this->type, $sql);
+                $sql = @iconv('UTF-8', $this->type, $sql);
             }
 
             if ('SQLSRV' == $this->ini['ADAPTER']) {
@@ -556,15 +550,6 @@ class MyMssql
     }
 
     /* private */
-
-    // private function setIni($ini = array())
-    // {
-    //     if (true == $this->ini['VERBOSE']) {
-    //         $this->logger('MyMssql Set Ini');
-    //     }
-
-    //     INI::write($this->RT.$this->DS.'MyMssql.ini', array('INI' => $ini));
-    // }
 
     private function sxExist($sxName)
     {
